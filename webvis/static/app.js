@@ -26,6 +26,7 @@ const setGoalBtn    = document.getElementById('set-goal-btn');
 const statusEl      = document.getElementById('status');
 const mapSelect     = document.getElementById('map-name');
 const plannerSelect = document.getElementById('planner');
+const neighborhoodSelect = document.getElementById('neighborhood');
 const speedInput    = document.getElementById('speed');
 const speedLabel    = document.getElementById('speed-label');
 const canvasEl      = document.getElementById('canvas-container');
@@ -62,6 +63,7 @@ function plannerLabel() { return plannerSelect.value.toUpperCase(); }
 function getParams() {
     return {
         planner: plannerSelect.value,
+        neighborhood: neighborhoodSelect.value,
         map_name: mapSelect.value,
         x0: parseInt(x0Input.value),
         y0: parseInt(y0Input.value),

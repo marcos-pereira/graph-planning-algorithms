@@ -21,11 +21,18 @@ from utils.Cartesian2DCollisionChecker import Cartesian2DCollisionChecker
 from planners.BreadthFirstPlanner import BreadthFirstPlanner
 from planners.DepthFirstPlanner import DepthFirstPlanner
 from planners.FourNeighborhood import FourNeighborhood
+from planners.EightNeighborhood import EightNeighborhood
 
 # The planners selectable through the planner query parameter of /plan
 PLANNERS = {
     "bfs": BreadthFirstPlanner,
     "dfs": DepthFirstPlanner,
+}
+
+# The neighborhoods selectable through the neighborhood query parameter of /plan
+NEIGHBORHOODS = {
+    "four": FourNeighborhood,
+    "eight": EightNeighborhood,
 }
 
 app = FastAPI(title="Graph Planner Web Visualizer")
@@ -81,16 +88,20 @@ def compute_plan(
     xg: int = Query(610, ge=0),
     yg: int = Query(861, ge=0),
     planner_name: str = Query("bfs", alias="planner"),
+    neighborhood_name: str = Query("four", alias="neighborhood"),
 ):
-    """Run the selected planner (bfs or dfs) and return the explored cells in discovery
-    order plus the path. Coordinates are (x, y) = (column, row) of the map image, while
-    the planner nodes are (row, column), so they are swapped on the way in and out.
+    """Run the selected planner (bfs or dfs) with the selected neighborhood (four or
+    eight) and return the explored cells in discovery order plus the path. Coordinates
+    are (x, y) = (column, row) of the map image, while the planner nodes are
+    (row, column), so they are swapped on the way in and out.
 
     explored is a flat [x0, y0, x1, y1, ...] list to keep the response small, since
     the search can discover hundreds of thousands of cells on a large map.
     """
     if planner_name not in PLANNERS:
         raise HTTPException(status_code=400, detail=f"Unknown planner '{planner_name}'. Available: {', '.join(PLANNERS)}.")
+    if neighborhood_name not in NEIGHBORHOODS:
+        raise HTTPException(status_code=400, detail=f"Unknown neighborhood '{neighborhood_name}'. Available: {', '.join(NEIGHBORHOODS)}.")
     _resolve_map_path(map_name)
     _acquire_planning_slot()
     try:
@@ -100,7 +111,7 @@ def compute_plan(
             raise HTTPException(status_code=400, detail=f"Failed to load map '{map_name}'.")
         map_height, map_width = scene_map.shape
 
-        neighborhood = FourNeighborhood()
+        neighborhood = NEIGHBORHOODS[neighborhood_name]()
         collision_checker = Cartesian2DCollisionChecker(scene_map)
         planner = PLANNERS[planner_name](scene_map, neighborhood, collision_checker)
 
@@ -129,6 +140,7 @@ def compute_plan(
             "planning_time": planning_time,
             "map_name": map_name,
             "planner": planner_name,
+            "neighborhood": neighborhood_name,
         }
     finally:
         PLANNING_SEMAPHORE.release()

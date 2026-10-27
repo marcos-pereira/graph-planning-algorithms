@@ -1,0 +1,69 @@
+name: graph-planning-algorithms
+
+# Build the image:
+#   docker compose -f docker/docker-compose.yml build
+#
+# Run main.py with the map and start/goal set in docker/.env (default: maps/simplemaze.png):
+#   docker compose -f docker/docker-compose.yml run --rm graph-planner
+#
+# Run with other arguments or open a shell:
+#   docker compose -f docker/docker-compose.yml run --rm graph-planner python3 main.py maps/smile.png 0 0 799 599
+#   docker compose -f docker/docker-compose.yml run --rm graph-planner bash
+#
+# Build and run the PixiJS web visualizer (opens at http://localhost:8000):
+#   docker compose -f docker/docker-compose.yml --profile webvis build
+#   docker compose -f docker/docker-compose.yml --profile webvis up
+#
+# Code changes in scripts/ and webvis/ are reflected immediately because the
+# directories are mounted as volumes (no rebuild needed).
+#
+# Parameters are read from docker/.env, with fallback defaults if that file or a
+# variable is missing:
+#   cp docker/.env.example docker/.env
+
+services:
+  graph-planner:
+    build:
+      # Build context is the project root so the Dockerfile can access scripts/
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: graph-planning-algorithms:latest
+    container_name: graph-planner
+    # Run as the host user so files written to scripts/ are not owned by root
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      # Mount source code and maps so edits are picked up without rebuilding
+      - ../scripts:/workspace
+    working_dir: /workspace
+    command:
+      - python3
+      - main.py
+      - ${MAP_FILE:-maps/simplemaze.png}
+      - ${START_X:-418}
+      - ${START_Y:-0}
+      - ${GOAL_X:-610}
+      - ${GOAL_Y:-861}
+
+  # ── Web visualizer: PixiJS in the browser ─────────────────────────────
+  graph-webvis:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.webvis
+    image: graph-planning-algorithms-webvis:latest
+    container_name: graph-webvis
+    profiles: [webvis]
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      # Path to scripts/ inside the container (planner modules + maps/)
+      SCRIPTS_DIR: /workspace
+    volumes:
+      # Planner source and map PNG files
+      - ../scripts:/workspace
+      # Web server and static frontend (--reload picks up changes automatically)
+      - ../webvis:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"

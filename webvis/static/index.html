@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BFS Visualizer</title>
+    <title>Graph Search Visualizer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -150,7 +150,15 @@
 <body>
 
 <aside id="sidebar">
-    <h1>🌊 BFS Visualizer</h1>
+    <h1>🌊 Graph Search Visualizer</h1>
+
+    <div class="field">
+        <span class="section-label">Algorithm</span>
+        <select id="planner">
+            <option value="bfs" selected>Breadth-first search (BFS)</option>
+            <option value="dfs">Depth-first search (DFS)</option>
+        </select>
+    </div>
 
     <div class="field">
         <span class="section-label">Map</span>
@@ -230,6 +238,6 @@
     </div>
 </main>
 
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

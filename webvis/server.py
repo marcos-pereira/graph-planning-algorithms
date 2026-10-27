@@ -19,7 +19,14 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from utils.Map import load_map
 from utils.Cartesian2DCollisionChecker import Cartesian2DCollisionChecker
 from planners.BreadthFirstPlanner import BreadthFirstPlanner
+from planners.DepthFirstPlanner import DepthFirstPlanner
 from planners.FourNeighborhood import FourNeighborhood
+
+# The planners selectable through the planner query parameter of /plan
+PLANNERS = {
+    "bfs": BreadthFirstPlanner,
+    "dfs": DepthFirstPlanner,
+}
 
 app = FastAPI(title="Graph Planner Web Visualizer")
 
@@ -73,14 +80,17 @@ def compute_plan(
     y0: int = Query(0, ge=0),
     xg: int = Query(610, ge=0),
     yg: int = Query(861, ge=0),
+    planner_name: str = Query("bfs", alias="planner"),
 ):
-    """Run the breadth-first planner and return the explored cells in discovery order
-    plus the path. Coordinates are (x, y) = (column, row) of the map image, while the
-    planner nodes are (row, column), so they are swapped on the way in and out.
+    """Run the selected planner (bfs or dfs) and return the explored cells in discovery
+    order plus the path. Coordinates are (x, y) = (column, row) of the map image, while
+    the planner nodes are (row, column), so they are swapped on the way in and out.
 
     explored is a flat [x0, y0, x1, y1, ...] list to keep the response small, since
-    BFS can discover hundreds of thousands of cells on a large map.
+    the search can discover hundreds of thousands of cells on a large map.
     """
+    if planner_name not in PLANNERS:
+        raise HTTPException(status_code=400, detail=f"Unknown planner '{planner_name}'. Available: {', '.join(PLANNERS)}.")
     _resolve_map_path(map_name)
     _acquire_planning_slot()
     try:
@@ -92,7 +102,7 @@ def compute_plan(
 
         neighborhood = FourNeighborhood()
         collision_checker = Cartesian2DCollisionChecker(scene_map)
-        planner = BreadthFirstPlanner(scene_map, neighborhood, collision_checker)
+        planner = PLANNERS[planner_name](scene_map, neighborhood, collision_checker)
 
         start = (y0, x0)
         goal = (yg, xg)
@@ -118,6 +128,7 @@ def compute_plan(
             "path_found": len(path) > 0,
             "planning_time": planning_time,
             "map_name": map_name,
+            "planner": planner_name,
         }
     finally:
         PLANNING_SEMAPHORE.release()

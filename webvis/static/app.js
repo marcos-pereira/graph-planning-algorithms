@@ -25,6 +25,8 @@ const setStartBtn   = document.getElementById('set-start-btn');
 const setGoalBtn    = document.getElementById('set-goal-btn');
 const statusEl      = document.getElementById('status');
 const mapSelect     = document.getElementById('map-name');
+const plannerSelect = document.getElementById('planner');
+const neighborhoodSelect = document.getElementById('neighborhood');
 const speedInput    = document.getElementById('speed');
 const speedLabel    = document.getElementById('speed-label');
 const canvasEl      = document.getElementById('canvas-container');
@@ -55,8 +57,13 @@ async function loadMapList() {
 // ── Helpers ────────────────────────────────────────────────────────────────
 function setStatus(msg) { statusEl.textContent = msg; }
 
+// Short label of the selected algorithm, e.g. BFS or DFS
+function plannerLabel() { return plannerSelect.value.toUpperCase(); }
+
 function getParams() {
     return {
+        planner: plannerSelect.value,
+        neighborhood: neighborhoodSelect.value,
         map_name: mapSelect.value,
         x0: parseInt(x0Input.value),
         y0: parseInt(y0Input.value),
@@ -217,7 +224,7 @@ async function run() {
     placeholder.style.display = 'block';
 
     const params = getParams();
-    setStatus('⏳ Running BFS (this may take a moment)...');
+    setStatus(`⏳ Running ${plannerLabel()} (this may take a moment)...`);
 
     const url = new URL('/plan', window.location.origin);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -300,7 +307,7 @@ function animationStep() {
     if (!isAnimating || !planData) return;
 
     const speed    = parseInt(speedInput.value);
-    // explored is a flat [x0, y0, x1, y1, ...] list in BFS discovery order
+    // explored is a flat [x0, y0, x1, y1, ...] list in the planner's discovery order
     const explored = planData.explored;
     const cellCount = explored.length / 2;
     const count    = Math.min(speed, cellCount - cellIndex);
@@ -358,6 +365,11 @@ function drawOverlay() {
 }
 
 // ── Events ─────────────────────────────────────────────────────────────────
+function updateRunButtonLabel() {
+    runBtn.textContent = `▶ Run ${plannerLabel()}`;
+}
+plannerSelect.addEventListener('change', updateRunButtonLabel);
+
 speedInput.addEventListener('input', () => {
     speedLabel.textContent = `${speedInput.value} cells / frame`;
 });

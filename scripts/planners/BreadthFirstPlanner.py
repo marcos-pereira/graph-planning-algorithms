@@ -15,14 +15,18 @@ class BreadthFirstPlanner(GraphPlanner):
             list[tuple[int, int]]: The planned path from start to goal, or an
             empty list if start or goal is invalid or no path exists.
         """
+        # Discovered nodes mapped to their predecessor, which also acts as the visited set.
+        # Kept after planning so the search can be inspected; insertion order is the
+        # BFS discovery order.
+        self.parent = {}
+
         # Both endpoints must be inside the grid and free of obstacles
         if not self.is_valid(start) or not self.is_valid(goal):
             print(f"⚠️ Invalid start {start} or goal {goal}: out of bounds or on an obstacle")
             return []
 
         queue = deque([start])
-        # Discovered nodes mapped to their predecessor, which also acts as the visited set
-        parent = {start: None}
+        self.parent[start] = None
 
         while queue:
             current = queue.popleft()
@@ -31,7 +35,7 @@ class BreadthFirstPlanner(GraphPlanner):
                 path = []
                 while current is not None:
                     path.append(current)
-                    current = parent[current]
+                    current = self.parent[current]
                 # return the path in reverse order (from start to goal)
                 return path[::-1]
 
@@ -39,8 +43,8 @@ class BreadthFirstPlanner(GraphPlanner):
             for neighbor in self.get_neighbors(current):
                 # If the neighbor has not been discovered yet,
                 # add it to the queue and set its parent
-                if neighbor not in parent:
-                    parent[neighbor] = current
+                if neighbor not in self.parent:
+                    self.parent[neighbor] = current
                     queue.append(neighbor)
 
         return []  # Return an empty path if no path is found

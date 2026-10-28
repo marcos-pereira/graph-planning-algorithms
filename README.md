@@ -20,6 +20,14 @@ Next, open **http://localhost:8000** in your browser. Select an algorithm, a nei
 
 ---
 
+## Demo
+
+A run of the breadth-first planner on a maze map in the web visualizer: the explored cells are animated in discovery order and the resulting path is drawn in blue.
+
+![Graph planner running on a maze map](videos/demo_maze1.gif)
+
+---
+
 ## Quick view of the software architecture
 
 See [`docs/uml-class-diagram.md`](docs/uml-class-diagram.md) for the UML class diagram (Mermaid source) and design notes.

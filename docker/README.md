@@ -1,6 +1,6 @@
 # Docker — graph-planning-algorithms
 
-Runs the scripts in `scripts/` (breadth-first planner on a grid map) in a container, either from the command line or through the PixiJS web visualizer in `webvis/`.
+Runs the scripts in `scripts/` (BFS, DFS and A* planners on a grid map) in a container, either from the command line or through the PixiJS web visualizer in `webvis/`.
 
 | Service | Profile | Image | Dockerfile | Volumes |
 |---------|---------|-------|------------|---------|
@@ -33,7 +33,7 @@ docker compose -f docker/docker-compose.yml --profile webvis build
 docker compose -f docker/docker-compose.yml --profile webvis up
 ```
 
-Open http://localhost:8000, pick a map, set start and goal (type them or use the click buttons) and press **Run BFS**. The server runs `BreadthFirstPlanner` and the page animates the explored cells in BFS discovery order (the wavefront), then draws the path. The speed slider sets how many cells are drawn per frame.
+Open http://localhost:8000, pick an algorithm (BFS, DFS or A*), a map, set start and goal (type them or use the click buttons) and press **Run**. The server runs the selected planner and the page animates the explored cells in discovery order (for BFS, the wavefront), then draws the path. The speed slider sets how many cells are drawn per frame.
 
 Only one planning run is allowed at a time; a second request gets HTTP 429 until the first finishes. A start or goal on an obstacle returns HTTP 400 with the reason shown in the sidebar.
 

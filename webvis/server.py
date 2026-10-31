@@ -12,6 +12,7 @@ import os
 import sys
 import threading
 import time
+from functools import partial
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
@@ -30,13 +31,17 @@ from utils.Map import load_map
 from utils.Cartesian2DCollisionChecker import Cartesian2DCollisionChecker
 from planners.BreadthFirstPlanner import BreadthFirstPlanner
 from planners.DepthFirstPlanner import DepthFirstPlanner
+from planners.AStarPlanner import AStarPlanner
 from planners.FourNeighborhood import FourNeighborhood
 from planners.EightNeighborhood import EightNeighborhood
+from utils.EuclideanDistance import EuclideanDistance
 
 # The planners selectable through the planner query parameter of /plan
 PLANNERS = {
     "bfs": BreadthFirstPlanner,
     "dfs": DepthFirstPlanner,
+    # A* additionally needs a distance metric for its edge cost and heuristic
+    "astar": partial(AStarPlanner, distance_metric=EuclideanDistance()),
 }
 
 # The neighborhoods selectable through the neighborhood query parameter of /plan
@@ -100,7 +105,7 @@ def compute_plan(
     planner_name: str = Query("bfs", alias="planner"),
     neighborhood_name: str = Query("four", alias="neighborhood"),
 ):
-    """Run the selected planner (bfs or dfs) with the selected neighborhood (four or
+    """Run the selected planner (bfs, dfs or astar) with the selected neighborhood (four or
     eight) and return the explored cells in discovery order plus the path. Coordinates
     are (x, y) = (column, row) of the map image, while the planner nodes are
     (row, column), so they are swapped on the way in and out.

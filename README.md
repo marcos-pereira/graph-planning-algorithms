@@ -1,6 +1,6 @@
 # graph-planning-algorithms
 
-Implementations of graph search planners (breadth-first and depth-first search) on grid maps in Python, with a command-line interface and a browser-based (PixiJS) visualization. Planners can use a four- or an eight-neighbour grid.
+Implementations of graph search planners (breadth-first, depth-first and A* search) on grid maps in Python, with a command-line interface and a browser-based (PixiJS) visualization. Planners can use a four- or an eight-neighbour grid.
 
 ## Quick test with browser visualizer using docker
 
@@ -30,6 +30,7 @@ A `GraphPlanner` is built from the occupancy grid, a `Neighborhood` (which nodes
 |---|---|---|
 | `BreadthFirstPlanner` | Queue (FIFO) | Fewest steps |
 | `DepthFirstPlanner` | Stack (LIFO) | A valid path, usually much longer |
+| `AStarPlanner` | Priority queue on `f = g + h` (Euclidean distance as edge cost and heuristic) | Shortest path (lowest total cost) |
 
 | Neighborhood | Moves |
 |---|---|
@@ -83,7 +84,7 @@ cd webvis
 uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Open **http://localhost:8000**. Select an **algorithm** (BFS or DFS), a **neighborhood** (four or eight neighbors) and a map, set the start and goal, adjust the animation speed, and click **Run**. The search runs on the server first, then the page animates the explored cells in discovery order and draws the path in blue. The **Speed** slider sets how many cells are drawn per frame.
+Open **http://localhost:8000**. Select an **algorithm** (BFS, DFS or A*), a **neighborhood** (four or eight neighbors) and a map, set the start and goal, adjust the animation speed, and click **Run**. The search runs on the server first, then the page animates the explored cells in discovery order and draws the path in blue. The **Speed** slider sets how many cells are drawn per frame.
 
 The page uses a single endpoint, `GET /plan`:
 
@@ -92,7 +93,7 @@ The page uses a single endpoint, `GET /plan`:
 | `map_name` | PNG map file in `scripts/maps/`. Defaults to `simplemaze.png`. |
 | `x0 y0` | Start coordinates (`x` is the column, `y` the row). Default `418 0`. |
 | `xg yg` | Goal coordinates. Default `610 861`. |
-| `planner` | `bfs` (default) or `dfs`. |
+| `planner` | `bfs` (default), `dfs` or `astar`. |
 | `neighborhood` | `four` (default) or `eight`. |
 
 An unknown planner or neighborhood, or a start or goal on an obstacle, returns HTTP 400 with the reason. Only one planning run is allowed at a time; a second request gets HTTP 429 until the first finishes.
